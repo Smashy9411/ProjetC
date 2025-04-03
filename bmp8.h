@@ -12,6 +12,7 @@ typedef struct {
     unsigned int height;  // Hauteur de l'image
     unsigned int colorDepth;  // Profondeur de couleur (8 bits pour niveaux de gris)
     unsigned int dataSize;  // Taille des données de l'image
+    t_bmp8 * bmp8_loadImage(const char * filename);
 } t_bmp8;
 
 
