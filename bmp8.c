@@ -1,5 +1,7 @@
 #include "bmp8.h"
+#include <math.h> // pour round() utilisé dans bmp8_applyFilter si besoin
 
+// Charger une image BMP 8 bits
 t_bmp8 *bmp8_loadImage(const char *filename) {
     FILE *file = fopen(filename, "rb");
     if (!file) {
@@ -7,45 +9,146 @@ t_bmp8 *bmp8_loadImage(const char *filename) {
         return NULL;
     }
 
-    // Allocation mémoire pour la structure
-    t_bmp8 *img = (t_bmp8*)malloc(sizeof(t_bmp8));
+    t_bmp8 *img = (t_bmp8 *)malloc(sizeof(t_bmp8));
     if (!img) {
         printf("Erreur : Allocation mémoire échouée\n");
         fclose(file);
         return NULL;
     }
 
-    // Lire l'en-tête du fichier BMP (54 octets)
     fread(img->header, sizeof(unsigned char), 54, file);
 
-    // Extraire les dimensions et la profondeur de couleur
-    img->width = *(int*)&img->header[18]; // c'est  les adresses de ces informations voir doc si pas compris
-    img->height = *(int*)&img->header[22];
-    img->colorDepth = *(short*)&img->header[28];
+    img->width = *(unsigned int *)&img->header[18];
+    img->height = *(unsigned int *)&img->header[22];
+    img->colorDepth = *(unsigned short *)&img->header[28];
 
     if (img->colorDepth != 8) {
-        printf("Erreur : Ce programme ne prend en charge que les images BMP 8 bits.\n");
+        printf("Erreur : Ce programme prend uniquement les images BMP 8 bits.\n");
         free(img);
         fclose(file);
         return NULL;
     }
 
-    // Lire la table des couleurs (1024 octets pour 256 couleurs)
     fread(img->colorTable, sizeof(unsigned char), 1024, file);
 
-    // Calcul de la taille des données
     img->dataSize = img->width * img->height;
-    img->data = (unsigned char*)malloc(img->dataSize);
+    img->data = (unsigned char *)malloc(img->dataSize);
     if (!img->data) {
-        printf("Erreur : Impossible d'allouer la mémoire pour les données d'image.\n");
+        printf("Erreur : Allocation mémoire pour les données échouée\n");
         free(img);
         fclose(file);
         return NULL;
     }
 
-    // Lire les pixels
     fread(img->data, sizeof(unsigned char), img->dataSize, file);
 
     fclose(file);
     return img;
+}
+
+// Sauvegarder une image BMP 8 bits
+void bmp8_saveImage(const char *filename, t_bmp8 *img) {
+    FILE *file = fopen(filename, "wb");
+    if (!file) {
+        printf("Erreur : Impossible de créer le fichier %s\n", filename);
+        return;
+    }
+
+    fwrite(img->header, sizeof(unsigned char), 54, file);
+    fwrite(img->colorTable, sizeof(unsigned char), 1024, file);
+    fwrite(img->data, sizeof(unsigned char), img->dataSize, file);
+
+    fclose(file);
+}
+
+// Libérer la mémoire d'une image BMP 8 bits
+void bmp8_free(t_bmp8 *img) {
+    if (img) {
+        if (img->data) {
+            free(img->data);
+        }
+        free(img);
+    }
+}
+
+// Afficher les infos d'une image BMP 8 bits
+void bmp8_printInfo(t_bmp8 *img) {
+    if (img) {
+        printf("\n--- Informations de l'image ---\n");
+        printf("Dimensions : %dx%d\n", img->width, img->height);
+        printf("Profondeur de couleur : %d bits\n", img->colorDepth);
+        printf("Taille des données : %d octets\n", img->dataSize);
+    } else {
+        printf("Aucune image chargée.\n");
+    }
+}
+
+// Inverser les couleurs (négatif)
+void bmp8_negative(t_bmp8 *img) {
+    if (img) {
+        for (unsigned int i = 0; i < img->dataSize; i++) {
+            img->data[i] = 255 - img->data[i];
+        }
+    }
+}
+
+// Modifier la luminosité
+void bmp8_brightness(t_bmp8 *img, int value) {
+    if (img) {
+        for (unsigned int i = 0; i < img->dataSize; i++) {
+            int pixel = img->data[i] + value;
+            if (pixel > 255) pixel = 255;
+            if (pixel < 0) pixel = 0;
+            img->data[i] = (unsigned char)pixel;
+        }
+    }
+}
+
+// Appliquer un seuillage (binarisation)
+void bmp8_threshold(t_bmp8 *img, int threshold) {
+    if (img) {
+        for (unsigned int i = 0; i < img->dataSize; i++) {
+            img->data[i] = (img->data[i] >= threshold) ? 255 : 0;
+        }
+    }
+}
+
+// Appliquer un filtre par convolution
+void bmp8_applyFilter(t_bmp8 *img, float **kernel, int kernelSize) {
+    if (!img || !kernel) return;
+
+    int offset = kernelSize / 2;
+    unsigned char *newData = (unsigned char *)malloc(img->dataSize);
+    if (!newData) {
+        printf("Erreur : Allocation mémoire échouée pour le filtrage.\n");
+        return;
+    }
+
+    for (unsigned int y = offset; y < img->height - offset; y++) {
+        for (unsigned int x = offset; x < img->width - offset; x++) {
+            float sum = 0.0f;
+
+            for (int ky = -offset; ky <= offset; ky++) {
+                for (int kx = -offset; kx <= offset; kx++) {
+                    int px = x + kx;
+                    int py = y + ky;
+                    sum += img->data[py * img->width + px] * kernel[ky + offset][kx + offset];
+                }
+            }
+
+            int pixel = (int)roundf(sum);
+            if (pixel > 255) pixel = 255;
+            if (pixel < 0) pixel = 0;
+            newData[y * img->width + x] = (unsigned char)pixel;
+        }
+    }
+
+    // Copier newData dans img->data
+    for (unsigned int y = offset; y < img->height - offset; y++) {
+        for (unsigned int x = offset; x < img->width - offset; x++) {
+            img->data[y * img->width + x] = newData[y * img->width + x];
+        }
+    }
+
+    free(newData);
 }
