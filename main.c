@@ -1,10 +1,9 @@
-#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "bmp8.h"
+#include "bmp24.h"
 
-void afficherInfosImage(t_bmp8 *image) {
-    bmp8_printInfo(image); // on utilise directement la fonction du .c
-}
+// --- MENUS ---
 
 void afficherMenuPrincipal() {
     printf("\n--- Menu principal ---\n");
@@ -16,89 +15,52 @@ void afficherMenuPrincipal() {
     printf(">>> Votre choix : ");
 }
 
-void afficherMenuFiltres() {
-    printf("\n--- Menu des filtres ---\n");
-    printf("1. Négatif (inversion des couleurs)\n");
+void afficherMenuFiltres8bits() {
+    printf("\n--- Filtres pour image 8 bits ---\n");
+    printf("1. Négatif\n");
     printf("2. Modifier la luminosité\n");
     printf("3. Binarisation (seuillage)\n");
-    printf("4. Flou simple (box blur)\n");
+    printf("4. Box blur\n");
     printf("5. Flou gaussien\n");
-    printf("6. Détection de contours\n");
-    printf("7. Effet de relief (emboss)\n");
-    printf("8. Netteté (sharpen)\n");
-    printf("9. Retour au menu principal\n");
-    printf(">>> Votre choix : ");
+    printf("6. Contours\n");
+    printf("7. Relief\n");
+    printf("8. Netteté\n");
+    printf("9. Retour\n");
+    printf(">>> ");
 }
 
-// Fonctions pour créer les noyaux (kernels) de filtrage
-float** creerKernelBoxBlur() {
+void afficherMenuFiltres24bits() {
+    printf("\n--- Filtres pour image 24 bits ---\n");
+    printf("1. Négatif\n");
+    printf("2. Niveaux de gris\n");
+    printf("3. Modifier la luminosité\n");
+    printf("4. Retour\n");
+    printf(">>> ");
+}
+
+// --- KERNELS ---
+
+float** creerKernel(int values[3][3], float diviseur) {
     float **kernel = (float**)malloc(3 * sizeof(float*));
     for (int i = 0; i < 3; i++) {
         kernel[i] = (float*)malloc(3 * sizeof(float));
         for (int j = 0; j < 3; j++) {
-            kernel[i][j] = 1.0f / 9.0f;
-        }
-    }
-    return kernel;
-}
-
-float** creerKernelGaussianBlur() {
-    float **kernel = (float**)malloc(3 * sizeof(float*));
-    int values[3][3] = {{1,2,1},{2,4,2},{1,2,1}};
-    for (int i = 0; i < 3; i++) {
-        kernel[i] = (float*)malloc(3 * sizeof(float));
-        for (int j = 0; j < 3; j++) {
-            kernel[i][j] = values[i][j] / 16.0f;
-        }
-    }
-    return kernel;
-}
-
-float** creerKernelOutline() {
-    float **kernel = (float**)malloc(3 * sizeof(float*));
-    int values[3][3] = {{-1,-1,-1},{-1,8,-1},{-1,-1,-1}};
-    for (int i = 0; i < 3; i++) {
-        kernel[i] = (float*)malloc(3 * sizeof(float));
-        for (int j = 0; j < 3; j++) {
-            kernel[i][j] = (float)values[i][j];
-        }
-    }
-    return kernel;
-}
-
-float** creerKernelEmboss() {
-    float **kernel = (float**)malloc(3 * sizeof(float*));
-    int values[3][3] = {{-2,-1,0},{-1,1,1},{0,1,2}};
-    for (int i = 0; i < 3; i++) {
-        kernel[i] = (float*)malloc(3 * sizeof(float));
-        for (int j = 0; j < 3; j++) {
-            kernel[i][j] = (float)values[i][j];
-        }
-    }
-    return kernel;
-}
-
-float** creerKernelSharpen() {
-    float **kernel = (float**)malloc(3 * sizeof(float*));
-    int values[3][3] = {{0,-1,0},{-1,5,-1},{0,-1,0}};
-    for (int i = 0; i < 3; i++) {
-        kernel[i] = (float*)malloc(3 * sizeof(float));
-        for (int j = 0; j < 3; j++) {
-            kernel[i][j] = (float)values[i][j];
+            kernel[i][j] = values[i][j] / diviseur;
         }
     }
     return kernel;
 }
 
 void libererKernel(float **kernel, int size) {
-    for (int i = 0; i < size; i++) {
-        free(kernel[i]);
-    }
+    for (int i = 0; i < size; i++) free(kernel[i]);
     free(kernel);
 }
 
+// --- MAIN ---
+
 int main(void) {
-    t_bmp8 *image = NULL;
+    t_bmp8 *image8 = NULL;
+    t_bmp24 *image24 = NULL;
     int choice;
     char filename[256];
 
@@ -107,120 +69,143 @@ int main(void) {
         scanf("%d", &choice);
 
         switch (choice) {
-            case 1:
-                printf("Entrez le nom du fichier BMP à ouvrir : ");
+            case 1: {
+                int format;
+                printf("Quel type d'image voulez-vous charger ? (1 = BMP 8 bits, 2 = BMP 24 bits) : ");
+                scanf("%d", &format);
+                printf("Entrez le nom du fichier : ");
                 scanf("%s", filename);
-                if (image) {
-                    bmp8_free(image);
-                }
-                image = bmp8_loadImage(filename);
-                if (image) {
-                    printf("Image chargée avec succès !\n");
+
+                if (image8) bmp8_free(image8);
+                if (image24) bmp24_free(image24);
+
+                if (format == 1) {
+                    image8 = bmp8_loadImage(filename);
+                    if (image8) printf("Image 8 bits chargée avec succès !\n");
+                    else printf("Échec du chargement.\n");
+                } else if (format == 2) {
+                    image24 = bmp24_loadImage(filename);
+                    if (image24) printf("Image 24 bits chargée avec succès !\n");
+                    else printf("Échec du chargement.\n");
                 } else {
-                    printf("Échec du chargement de l'image.\n");
+                    printf("Format inconnu.\n");
                 }
                 break;
+            }
 
             case 2:
-                if (image) {
-                    printf("Entrez le nom du fichier BMP de sortie : ");
-                    scanf("%s", filename);
-                    bmp8_saveImage(filename, image);
-                    printf("Image sauvegardée avec succès !\n");
+                printf("Entrez le nom du fichier de sortie : ");
+                scanf("%s", filename);
+                if (image8) {
+                    bmp8_saveImage(filename, image8);
+                    printf("Image 8 bits sauvegardée !\n");
+                } else if (image24) {
+                    bmp24_saveImage(image24, filename);
+                    printf("Image 24 bits sauvegardée !\n");
                 } else {
                     printf("Aucune image à sauvegarder.\n");
                 }
                 break;
 
             case 3:
-                if (image) {
-                    int filterChoice;
-                    afficherMenuFiltres();
-                    scanf("%d", &filterChoice);
-
-                    switch (filterChoice) {
-                        case 1:
-                            bmp8_negative(image);
-                            printf("Filtre négatif appliqué.\n");
-                            break;
+                if (image8) {
+                    int f;
+                    afficherMenuFiltres8bits();
+                    scanf("%d", &f);
+                    switch (f) {
+                        case 1: bmp8_negative(image8); break;
                         case 2: {
-                            int brightness;
-                            printf("Entrez la valeur de luminosité (-255 à 255) : ");
-                            scanf("%d", &brightness);
-                            bmp8_brightness(image, brightness);
-                            printf("Luminosité modifiée.\n");
+                            int b;
+                            printf("Luminosité (-255 à 255) : "); scanf("%d", &b);
+                            bmp8_brightness(image8, b);
                             break;
                         }
                         case 3: {
-                            int threshold;
-                            printf("Entrez le seuil de binarisation (0 à 255) : ");
-                            scanf("%d", &threshold);
-                            bmp8_threshold(image, threshold);
-                            printf("Binarisation effectuée.\n");
+                            int t;
+                            printf("Seuil (0 à 255) : "); scanf("%d", &t);
+                            bmp8_threshold(image8, t);
                             break;
                         }
                         case 4: {
-                            float **kernel = creerKernelBoxBlur();
-                            bmp8_applyFilter(image, kernel, 3);
+                            int k[3][3] = {{1,1,1},{1,1,1},{1,1,1}};
+                            float **kernel = creerKernel(k, 9.0f);
+                            bmp8_applyFilter(image8, kernel, 3);
                             libererKernel(kernel, 3);
-                            printf("Filtre box blur appliqué.\n");
                             break;
                         }
                         case 5: {
-                            float **kernel = creerKernelGaussianBlur();
-                            bmp8_applyFilter(image, kernel, 3);
+                            int k[3][3] = {{1,2,1},{2,4,2},{1,2,1}};
+                            float **kernel = creerKernel(k, 16.0f);
+                            bmp8_applyFilter(image8, kernel, 3);
                             libererKernel(kernel, 3);
-                            printf("Filtre flou gaussien appliqué.\n");
                             break;
                         }
                         case 6: {
-                            float **kernel = creerKernelOutline();
-                            bmp8_applyFilter(image, kernel, 3);
+                            int k[3][3] = {{-1,-1,-1},{-1,8,-1},{-1,-1,-1}};
+                            float **kernel = creerKernel(k, 1.0f);
+                            bmp8_applyFilter(image8, kernel, 3);
                             libererKernel(kernel, 3);
-                            printf("Détection de contours appliquée.\n");
                             break;
                         }
                         case 7: {
-                            float **kernel = creerKernelEmboss();
-                            bmp8_applyFilter(image, kernel, 3);
+                            int k[3][3] = {{-2,-1,0},{-1,1,1},{0,1,2}};
+                            float **kernel = creerKernel(k, 1.0f);
+                            bmp8_applyFilter(image8, kernel, 3);
                             libererKernel(kernel, 3);
-                            printf("Effet relief appliqué.\n");
                             break;
                         }
                         case 8: {
-                            float **kernel = creerKernelSharpen();
-                            bmp8_applyFilter(image, kernel, 3);
+                            int k[3][3] = {{0,-1,0},{-1,5,-1},{0,-1,0}};
+                            float **kernel = creerKernel(k, 1.0f);
+                            bmp8_applyFilter(image8, kernel, 3);
                             libererKernel(kernel, 3);
-                            printf("Netteté améliorée.\n");
                             break;
                         }
-                        case 9:
-                            printf("Retour au menu principal.\n");
-                            break;
-                        default:
-                            printf("Filtre invalide.\n");
-                            break;
+                        case 9: break;
+                        default: printf("Filtre invalide.\n");
                     }
+                    printf("Filtre 8 bits appliqué.\n");
+                } else if (image24) {
+                    int f;
+                    afficherMenuFiltres24bits();
+                    scanf("%d", &f);
+                    switch (f) {
+                        case 1: bmp24_negative(image24); break;
+                        case 2: bmp24_grayscale(image24); break;
+                        case 3: {
+                            int b;
+                            printf("Luminosité (-255 à 255) : "); scanf("%d", &b);
+                            bmp24_brightness(image24, b);
+                            break;
+                        }
+                        case 4: break;
+                        default: printf("Filtre invalide.\n");
+                    }
+                    printf("Filtre 24 bits appliqué.\n");
                 } else {
                     printf("Aucune image chargée.\n");
                 }
                 break;
 
             case 4:
-                afficherInfosImage(image);
+                if (image8) bmp8_printInfo(image8);
+                else if (image24) {
+                    printf("\n--- Informations image 24 bits ---\n");
+                    printf("Dimensions : %dx%d\n", image24->width, image24->height);
+                    printf("Profondeur : %d bits\n", image24->colorDepth);
+                } else {
+                    printf("Aucune image chargée.\n");
+                }
                 break;
 
             case 5:
+                if (image8) bmp8_free(image8);
+                if (image24) bmp24_free(image24);
                 printf("Au revoir !\n");
-                if (image) {
-                    bmp8_free(image);
-                }
                 return 0;
 
             default:
-                printf("Option invalide, veuillez réessayer.\n");
+                printf("Option invalide.\n");
         }
     }
-
-    return 0;
 }
