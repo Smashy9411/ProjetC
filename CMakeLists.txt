@@ -1,10 +1,9 @@
-cmake_minimum_required(VERSION 3.10)
-project(ProjetC C)
+cmake_minimum_required(VERSION 3.25)
+project(ProjetC)
 
-set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD 11)
 
-add_executable(main
-
+add_executable(ProjetC
         main.c
         bmp8.c
         bmp24.c

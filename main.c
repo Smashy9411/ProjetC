@@ -38,6 +38,18 @@ void afficherMenuFiltres24bits() {
     printf(">>> ");
 }
 
+void afficherMenuFiltresConvolution24bits() {
+    printf("\n--- Filtres de convolution 24 bits ---\n");
+    printf("1. Box blur\n");
+    printf("2. Flou gaussien\n");
+    printf("3. Contours (outline)\n");
+    printf("4. Relief (emboss)\n");
+    printf("5. Netteté (sharpen)\n");
+    printf("6. Retour\n");
+    printf(">>> ");
+}
+
+
 // --- KERNELS ---
 
 float** creerKernel(int values[3][3], float diviseur) {
@@ -178,10 +190,25 @@ int main(void) {
                             bmp24_brightness(image24, b);
                             break;
                         }
-                        case 4: break;
-                        default: printf("Filtre invalide.\n");
+                        case 4: {
+                            int fc;
+                            afficherMenuFiltresConvolution24bits();
+                            scanf("%d", &fc);
+                            switch (fc) {
+                                case 1: bmp24_boxBlur(image24); break;
+                                case 2: bmp24_gaussianBlur(image24); break;
+                                case 3: bmp24_outline(image24); break;
+                                case 4: bmp24_emboss(image24); break;
+                                case 5: bmp24_sharpen(image24); break;
+                                case 6: break;
+                                default: printf("Filtre invalide.\n"); break;
+                            }
+                            break;
+                        }
+                        default: printf("Filtre invalide.\n"); break;
                     }
                     printf("Filtre 24 bits appliqué.\n");
+
                 } else {
                     printf("Aucune image chargée.\n");
                 }

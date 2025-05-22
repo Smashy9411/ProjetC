@@ -1,5 +1,6 @@
 #include "bmp24.h"
-#include <string.h>  // Pour memset
+#include <string.h> // Pour memset
+#include <math.h>
 
 // Allouer la mémoire pour les pixels
 t_pixel **bmp24_allocateDataPixels(int width, int height) {
@@ -164,3 +165,113 @@ void bmp24_brightness(t_bmp24 *img, int value) {
         }
     }
 }
+
+#include <math.h> // pour round()
+
+// Convolution sur un seul pixel
+t_pixel bmp24_convolution(t_bmp24 *img, int x, int y, float **kernel, int kernelSize) {
+    int offset = kernelSize / 2;
+    float r = 0.0f, g = 0.0f, b = 0.0f;
+
+    for (int ky = -offset; ky <= offset; ky++) {
+        for (int kx = -offset; kx <= offset; kx++) {
+            int px = x + kx;
+            int py = y + ky;
+            if (px >= 0 && px < img->width && py >= 0 && py < img->height) {
+                t_pixel p = img->data[py][px];
+                float coeff = kernel[ky + offset][kx + offset];
+                r += p.red * coeff;
+                g += p.green * coeff;
+                b += p.blue * coeff;
+            }
+        }
+    }
+
+    t_pixel result;
+    result.red = (uint8_t)fminf(fmaxf(roundf(r), 0), 255);
+    result.green = (uint8_t)fminf(fmaxf(roundf(g), 0), 255);
+    result.blue = (uint8_t)fminf(fmaxf(roundf(b), 0), 255);
+
+    return result;
+}
+
+// Application générique d’un filtre avec un kernel
+void bmp24_applyFilter(t_bmp24 *img, float **kernel, int kernelSize) {
+    t_pixel **newData = bmp24_allocateDataPixels(img->width, img->height);
+    if (!newData) return;
+
+    int offset = kernelSize / 2;
+
+    for (int y = offset; y < img->height - offset; y++) {
+        for (int x = offset; x < img->width - offset; x++) {
+            newData[y][x] = bmp24_convolution(img, x, y, kernel, kernelSize);
+        }
+    }
+
+    // Remplacer l’ancienne data
+    bmp24_freeDataPixels(img->data, img->height);
+    img->data = newData;
+}
+
+// === Filtres spécifiques ===
+
+void bmp24_boxBlur(t_bmp24 *img) {
+    int k[3][3] = {{1,1,1},{1,1,1},{1,1,1}};
+    float **kernel = (float **)malloc(3 * sizeof(float *));
+    for (int i = 0; i < 3; i++) {
+        kernel[i] = (float *)malloc(3 * sizeof(float));
+        for (int j = 0; j < 3; j++) kernel[i][j] = k[i][j] / 9.0f;
+    }
+    bmp24_applyFilter(img, kernel, 3);
+    for (int i = 0; i < 3; i++) free(kernel[i]);
+    free(kernel);
+}
+
+void bmp24_gaussianBlur(t_bmp24 *img) {
+    int k[3][3] = {{1,2,1},{2,4,2},{1,2,1}};
+    float **kernel = (float **)malloc(3 * sizeof(float *));
+    for (int i = 0; i < 3; i++) {
+        kernel[i] = (float *)malloc(3 * sizeof(float));
+        for (int j = 0; j < 3; j++) kernel[i][j] = k[i][j] / 16.0f;
+    }
+    bmp24_applyFilter(img, kernel, 3);
+    for (int i = 0; i < 3; i++) free(kernel[i]);
+    free(kernel);
+}
+
+void bmp24_outline(t_bmp24 *img) {
+    int k[3][3] = {{-1,-1,-1},{-1,8,-1},{-1,-1,-1}};
+    float **kernel = (float **)malloc(3 * sizeof(float *));
+    for (int i = 0; i < 3; i++) {
+        kernel[i] = (float *)malloc(3 * sizeof(float));
+        for (int j = 0; j < 3; j++) kernel[i][j] = (float)k[i][j];
+    }
+    bmp24_applyFilter(img, kernel, 3);
+    for (int i = 0; i < 3; i++) free(kernel[i]);
+    free(kernel);
+}
+
+void bmp24_emboss(t_bmp24 *img) {
+    int k[3][3] = {{-2,-1,0},{-1,1,1},{0,1,2}};
+    float **kernel = (float **)malloc(3 * sizeof(float *));
+    for (int i = 0; i < 3; i++) {
+        kernel[i] = (float *)malloc(3 * sizeof(float));
+        for (int j = 0; j < 3; j++) kernel[i][j] = (float)k[i][j];
+    }
+    bmp24_applyFilter(img, kernel, 3);
+    for (int i = 0; i < 3; i++) free(kernel[i]);
+    free(kernel);
+}
+
+void bmp24_sharpen(t_bmp24 *img) {
+    int k[3][3] = {{0,-1,0},{-1,5,-1},{0,-1,0}};
+    float **kernel = (float **)malloc(3 * sizeof(float *));
+    for (int i = 0; i < 3; i++) {
+        kernel[i] = (float *)malloc(3 * sizeof(float));
+        for (int j = 0; j < 3; j++) kernel[i][j] = (float)k[i][j];
+    }
+    bmp24_applyFilter(img, kernel, 3);
+    for (int i = 0; i < 3; i++) free(kernel[i]);
+    free(kernel);
+}
+
