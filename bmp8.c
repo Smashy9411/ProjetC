@@ -1,5 +1,6 @@
 #include "bmp8.h"
 #include <math.h> // pour round() utilisé dans bmp8_applyFilter si besoin
+#include <stdlib.h>
 
 // Charger une image BMP 8 bits
 t_bmp8 *bmp8_loadImage(const char *filename) {
