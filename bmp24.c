@@ -260,6 +260,18 @@ void bmp24_applyFilter(t_bmp24 *img, float **kernel, int kernelSize) {
     img->data = newData;
 }
 
+void bmp24_boxBlur(t_bmp24 *img) {
+    int k[3][3] = {{1,1,1},{1,1,1},{1,1,1}};
+    float **kernel = (float **)malloc(3 * sizeof(float *));
+    for (int i = 0; i < 3; i++) {
+        kernel[i] = (float *)malloc(3 * sizeof(float));
+        for (int j = 0; j < 3; j++) kernel[i][j] = k[i][j] / 9.0f;
+    }
+    bmp24_applyFilter(img, kernel, 3);
+    for (int i = 0; i < 3; i++) free(kernel[i]);
+    free(kernel);
+}
+
 /**
  * Applique un flou gaussien 3x3 à l'image
  * @param img Image à modifier
@@ -270,6 +282,17 @@ void bmp24_gaussianBlur(t_bmp24 *img) {
     for (int i = 0; i < 3; i++) {
         kernel[i] = (float *)malloc(3 * sizeof(float));
         for (int j = 0; j < 3; j++) kernel[i][j] = k[i][j] / 16.0f;
+    }
+    bmp24_applyFilter(img, kernel, 3);
+    for (int i = 0; i < 3; i++) free(kernel[i]);
+    free(kernel);
+}
+void bmp24_outline(t_bmp24 *img) {
+    int k[3][3] = {{-1,-1,-1},{-1,8,-1},{-1,-1,-1}};
+    float **kernel = (float **)malloc(3 * sizeof(float *));
+    for (int i = 0; i < 3; i++) {
+        kernel[i] = (float *)malloc(3 * sizeof(float));
+        for (int j = 0; j < 3; j++) kernel[i][j] = (float)k[i][j];
     }
     bmp24_applyFilter(img, kernel, 3);
     for (int i = 0; i < 3; i++) free(kernel[i]);
