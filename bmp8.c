@@ -19,7 +19,7 @@ t_bmp8 *bmp8_loadImage(const char *filename) {
 
     t_bmp8 *img = (t_bmp8 *)malloc(sizeof(t_bmp8));
     if (!img) {
-        printf("Erreur : Allocation mémoire échouée\n");
+        printf("Erreur : Allocation memoire echouee\n");
         fclose(file);
         return NULL;
     }
@@ -51,7 +51,7 @@ t_bmp8 *bmp8_loadImage(const char *filename) {
     img->dataSize = img->width * img->height;
     img->data = (unsigned char *)malloc(img->dataSize);
     if (!img->data) {
-        printf("Erreur : Allocation mémoire pour les données échouée\n");
+        printf("Erreur : Allocation memoire pour les donnees echouee\n");
         free(img);
         fclose(file);
         return NULL;
@@ -74,7 +74,7 @@ t_bmp8 *bmp8_loadImage(const char *filename) {
 void bmp8_saveImage(const char *filename, t_bmp8 *img) {
     FILE *file = fopen(filename, "wb");
     if (!file) {
-        printf("Erreur : Impossible de créer le fichier %s\n", filename);
+        printf("Erreur : Impossible de creer le fichier %s\n", filename);
         return;
     }
 
@@ -113,9 +113,9 @@ void bmp8_printInfo(t_bmp8 *img) {
         printf("\n--- Informations de l'image ---\n");
         printf("Dimensions : %dx%d\n", img->width, img->height);
         printf("Profondeur de couleur : %d bits\n", img->colorDepth);
-        printf("Taille des données : %d octets\n", img->dataSize);
+        printf("Taille des donnees : %d octets\n", img->dataSize);
     } else {
-        printf("Aucune image chargée.\n");
+        printf("Aucune image chargee.\n");
     }
 }
 
@@ -184,7 +184,7 @@ void bmp8_applyFilter(t_bmp8 *img, float **kernel, int kernelSize) {
     int offset = kernelSize / 2;
     unsigned char *newData = (unsigned char *)malloc(img->dataSize);
     if (!newData) {
-        printf("Erreur : Allocation mémoire échouée pour le filtrage.\n");
+        printf("Erreur : Allocation memoire echouee pour le filtrage.\n");
         return;
     }
 

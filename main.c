@@ -1,4 +1,4 @@
-#include <stdlib.h>
+﻿#include <stdlib.h>
 #include <string.h>
 #include "bmp8.h"
 #include "bmp24.h"
@@ -18,14 +18,14 @@ void afficherMenuPrincipal() {
 
 void afficherMenuFiltres8bits() {
     printf("\n--- Filtres pour image 8 bits ---\n");
-    printf("1. Négatif\n");
-    printf("2. Modifier la luminosité\n");
+    printf("1. Negatif\n");
+    printf("2. Modifier la luminosite\n");
     printf("3. Binarisation (seuillage)\n");
     printf("4. Box blur\n");
     printf("5. Flou gaussien\n");
     printf("6. Contours\n");
     printf("7. Relief\n");
-    printf("8. Netteté\n");
+    printf("8. Nettete\n");
     printf("9. Egalisation histogramme\n");
     printf("10. Retour\n");
     printf(">>> ");
@@ -35,9 +35,9 @@ void afficherMenuFiltres8bits() {
 
 void afficherMenuFiltres24bits() {
     printf("\n--- Filtres pour image 24 bits ---\n");
-    printf("1. Négatif\n");
+    printf("1. Negatif\n");
     printf("2. Niveaux de gris\n");
-    printf("3. Modifier la luminosité\n");
+    printf("3. Modifier la luminosite\n");
     printf("4. Filtres convolution\n");
     printf("5. Egalisation histogramme\n");
     printf("6. Retour\n");
@@ -52,7 +52,7 @@ void afficherMenuFiltresConvolution24bits() {
     printf("2. Flou gaussien\n");
     printf("3. Contours (outline)\n");
     printf("4. Relief (emboss)\n");
-    printf("5. Netteté (sharpen)\n");
+    printf("5. Nettete (sharpen)\n");
     printf("6. Retour\n");
     printf(">>> ");
 }
@@ -101,12 +101,12 @@ int main(void) {
 
                 if (format == 1) {
                     image8 = bmp8_loadImage(filename);
-                    if (image8) printf("Image 8 bits chargée avec succès !\n");
-                    else printf("Échec du chargement.\n");
+                    if (image8) printf("Image 8 bits chargee avec succes !\n");
+                    else printf("Echec du chargement.\n");
                 } else if (format == 2) {
                     image24 = bmp24_loadImage(filename);
-                    if (image24) printf("Image 24 bits chargée avec succès !\n");
-                    else printf("Échec du chargement.\n");
+                    if (image24) printf("Image 24 bits chargee avec succes !\n");
+                    else printf("Echec du chargement.\n");
                 } else {
                     printf("Format inconnu.\n");
                 }
@@ -118,10 +118,10 @@ int main(void) {
                 scanf("%s", filename);
                 if (image8) {
                     bmp8_saveImage(filename, image8);
-                    printf("Image 8 bits sauvegardée !\n");
+                    printf("Image 8 bits sauvegardee !\n");
                 } else if (image24) {
                     bmp24_saveImage(image24, filename);
-                    printf("Image 24 bits sauvegardée !\n");
+                    printf("Image 24 bits sauvegardee !\n");
                 } else {
                     printf("Aucune image à sauvegarder.\n");
                 }
@@ -136,7 +136,7 @@ int main(void) {
                         case 1: bmp8_negative(image8); break;
                         case 2: {
                             int b;
-                            printf("Luminosité (-255 à 255) : "); scanf("%d", &b);
+                            printf("Luminosite (-255 à 255) : "); scanf("%d", &b);
                             bmp8_brightness(image8, b);
                             break;
                         }
@@ -185,7 +185,7 @@ int main(void) {
                         case 10: break;
                         default: printf("Filtre invalide.\n");
                     }
-                    printf("Filtre 8 bits appliqué.\n");
+                    printf("Filtre 8 bits applique.\n");
                 } else if (image24) {
                     int f;
                     afficherMenuFiltres24bits();
@@ -195,7 +195,7 @@ int main(void) {
                         case 2: bmp24_grayscale(image24); break;
                         case 3: {
                             int b;
-                            printf("Luminosité (-255 à 255) : "); scanf("%d", &b);
+                            printf("Luminosite (-255 à 255) : "); scanf("%d", &b);
                             bmp24_brightness(image24, b);
                             break;
                         }
