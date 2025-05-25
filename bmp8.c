@@ -32,6 +32,10 @@ t_bmp8 *bmp8_loadImage(const char *filename) {
 
     fread(img->colorTable, sizeof(unsigned char), 1024, file);
 
+    // Lire l'offset vers les données d'image
+    unsigned int dataOffset = *(unsigned int *)&img->header[10];
+    fseek(file, dataOffset, SEEK_SET);
+
     img->dataSize = img->width * img->height;
     img->data = (unsigned char *)malloc(img->dataSize);
     if (!img->data) {
@@ -46,6 +50,7 @@ t_bmp8 *bmp8_loadImage(const char *filename) {
     fclose(file);
     return img;
 }
+
 
 // Sauvegarder une image BMP 8 bits
 void bmp8_saveImage(const char *filename, t_bmp8 *img) {

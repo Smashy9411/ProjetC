@@ -2,8 +2,7 @@
 #include <string.h>
 #include "bmp8.h"
 #include "bmp24.h"
-#include "bmp8.c"
-#include "bmp24.c"
+
 
 // --- MENUS ---
 
