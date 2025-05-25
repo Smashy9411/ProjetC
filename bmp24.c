@@ -260,6 +260,10 @@ void bmp24_applyFilter(t_bmp24 *img, float **kernel, int kernelSize) {
     img->data = newData;
 }
 
+/**
+ * @brief Applique un flou moyen (box blur) à l'image,
+ * @param img Image BMP à modifier (entrée/sortie)
+ */
 void bmp24_boxBlur(t_bmp24 *img) {
     int k[3][3] = {{1,1,1},{1,1,1},{1,1,1}};
     float **kernel = (float **)malloc(3 * sizeof(float *));
@@ -287,6 +291,10 @@ void bmp24_gaussianBlur(t_bmp24 *img) {
     for (int i = 0; i < 3; i++) free(kernel[i]);
     free(kernel);
 }
+/**
+ * @brief Applique un effet de contour à l'image,
+ * @param img Image BMP à modifier (entrée/sortie)
+ */
 void bmp24_outline(t_bmp24 *img) {
     int k[3][3] = {{-1,-1,-1},{-1,8,-1},{-1,-1,-1}};
     float **kernel = (float **)malloc(3 * sizeof(float *));

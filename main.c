@@ -114,7 +114,7 @@ int main(void) {
             }
 
             case 2:
-                printf("Entrez le nom du fichier de sortie : ");
+                printf("Entrez le nom du fichier de sortie (mettre '.bmp' a la fin du nom) : ");
                 scanf("%s", filename);
                 if (image8) {
                     bmp8_saveImage(filename, image8);
