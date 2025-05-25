@@ -52,7 +52,7 @@ void bmp24_free(t_bmp24 *img) {
     free(img);
 }
 
-// Charger une image BMP 24 bits
+// Charge une image BMP 24 bits
 t_bmp24 *bmp24_loadImage(const char *filename) {
     FILE *file = fopen(filename, "rb");
     if (!file) {
@@ -274,4 +274,68 @@ void bmp24_sharpen(t_bmp24 *img) {
     for (int i = 0; i < 3; i++) free(kernel[i]);
     free(kernel);
 }
+void bmp24_equalizeHistogram(t_bmp24 *img) {
+    if (!img || !img->data) return;
+
+    int width = img->width;
+    int height = img->height;
+    int histogram[256] = {0};
+
+    float *Y = (float *)malloc(width * height * sizeof(float));
+
+    // Convert RGB to Y
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            t_pixel p = img->data[y][x];
+            int index = y * width + x;
+            Y[index] = 0.299f * p.red + 0.587f * p.green + 0.114f * p.blue;
+            histogram[(int)Y[index]]++;
+        }
+    }
+
+    // Histogram equalization
+    float cdf[256] = {0};
+    cdf[0] = histogram[0];
+    for (int i = 1; i < 256; i++) {
+        cdf[i] = cdf[i - 1] + histogram[i];
+    }
+
+    float cdf_min = 0;
+    for (int i = 0; i < 256; i++) {
+        if (cdf[i] != 0) {
+            cdf_min = cdf[i];
+            break;
+        }
+    }
+
+    float scale = 255.0f / (width * height - cdf_min);
+    unsigned char equalized[256];
+    for (int i = 0; i < 256; i++) {
+        equalized[i] = (unsigned char)(fmaxf(0, roundf((cdf[i] - cdf_min) * scale)));
+    }
+
+    // Replace Y with equalized Y, convert back to RGB
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            int index = y * width + x;
+            float newY = equalized[(int)Y[index]];
+            t_pixel *p = &img->data[y][x];
+
+            float U = -0.14713f * p->red - 0.28886f * p->green + 0.436f * p->blue;
+            float V = 0.615f * p->red - 0.51499f * p->green - 0.10001f * p->blue;
+
+
+            int r = roundf(newY + 1.13983f * V);
+            int g = roundf(newY - 0.39465f * U - 0.58060f * V);
+            int b = roundf(newY + 2.03211f * U);
+
+            p->red = (r > 255) ? 255 : (r < 0 ? 0 : r);
+            p->green = (g > 255) ? 255 : (g < 0 ? 0 : g);
+            p->blue = (b > 255) ? 255 : (b < 0 ? 0 : b);
+        }
+    }
+
+    free(Y);
+}
+
 

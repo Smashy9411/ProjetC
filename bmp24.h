@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#pragma pack(push, 1)  // Désactive l’alignement mémoire
+
+
 // Structures
 typedef struct {
     uint16_t type;
@@ -65,5 +68,9 @@ void bmp24_outline(t_bmp24 *img);
 void bmp24_emboss(t_bmp24 *img);
 void bmp24_sharpen(t_bmp24 *img);
 
+void bmp24_equalizeHistogram(t_bmp24 *img);
 
+
+#pragma pack(pop)  // Rétablit l’alignement par défaut
 #endif // BMP24_H
+

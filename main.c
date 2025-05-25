@@ -26,18 +26,25 @@ void afficherMenuFiltres8bits() {
     printf("6. Contours\n");
     printf("7. Relief\n");
     printf("8. Netteté\n");
-    printf("9. Retour\n");
+    printf("9. Egalisation histogramme\n");
+    printf("10. Retour\n");
     printf(">>> ");
 }
+
+
 
 void afficherMenuFiltres24bits() {
     printf("\n--- Filtres pour image 24 bits ---\n");
     printf("1. Négatif\n");
     printf("2. Niveaux de gris\n");
     printf("3. Modifier la luminosité\n");
-    printf("4. Retour\n");
+    printf("4. Filtres convolution\n");
+    printf("5. Egalisation histogramme\n");
+    printf("6. Retour\n");
     printf(">>> ");
 }
+
+
 
 void afficherMenuFiltresConvolution24bits() {
     printf("\n--- Filtres de convolution 24 bits ---\n");
@@ -174,7 +181,8 @@ int main(void) {
                             libererKernel(kernel, 3);
                             break;
                         }
-                        case 9: break;
+                        case 9: bmp8_equalizeHistogram(image8); break;
+                        case 10: break;
                         default: printf("Filtre invalide.\n");
                     }
                     printf("Filtre 8 bits appliqué.\n");
@@ -206,6 +214,8 @@ int main(void) {
                             }
                             break;
                         }
+                        case 5: bmp24_equalizeHistogram(image24); break;
+                        case 6: break;
                         default: printf("Filtre invalide.\n"); break;
                     }
                     printf("Filtre 24 bits appliqué.\n");

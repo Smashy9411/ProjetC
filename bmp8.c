@@ -1,12 +1,15 @@
 #include "bmp8.h"
 #include <math.h> // pour round() utilisé dans bmp8_applyFilter si besoin
 #include <stdlib.h>
+#include <dirent.h>
+
 
 // Charger une image BMP 8 bits
 t_bmp8 *bmp8_loadImage(const char *filename) {
     FILE *file = fopen(filename, "rb");
     if (!file) {
         printf("Erreur : Impossible d'ouvrir le fichier %s\n", filename);
+
         return NULL;
     }
 
@@ -158,3 +161,37 @@ void bmp8_applyFilter(t_bmp8 *img, float **kernel, int kernelSize) {
 
     free(newData);
 }
+void bmp8_equalizeHistogram(t_bmp8 *img) {
+    if (!img || !img->data) return;
+
+    int histogram[256] = {0};
+    for (unsigned int i = 0; i < img->dataSize; i++) {
+        histogram[img->data[i]]++;
+    }
+
+    float cdf[256] = {0};
+    cdf[0] = histogram[0];
+    for (int i = 1; i < 256; i++) {
+        cdf[i] = cdf[i - 1] + histogram[i];
+    }
+
+    float cdf_min = 0;
+    for (int i = 0; i < 256; i++) {
+        if (cdf[i] != 0) {
+            cdf_min = cdf[i];
+            break;
+        }
+    }
+
+    float scale = 255.0f / (img->width * img->height - cdf_min);
+
+    unsigned char equalized[256];
+    for (int i = 0; i < 256; i++) {
+        equalized[i] = (unsigned char)(fmaxf(0, roundf((cdf[i] - cdf_min) * scale)));
+    }
+
+    for (unsigned int i = 0; i < img->dataSize; i++) {
+        img->data[i] = equalized[img->data[i]];
+    }
+}
+
